@@ -65,17 +65,6 @@ resource "aws_instance" "ec2_instance" {
     host        = self.public_ip
   }
 
-  # Copy application file
-  provisioner "file" {
-    source      = "../appdb"
-    destination = "/home/ubuntu/"
-  }
-
-  provisioner "file" {
-    source      = "../files/app.sh"
-    destination = "/tmp/app.sh"
-  }
-
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update",
@@ -89,7 +78,9 @@ resource "aws_instance" "ec2_instance" {
       "curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-doctor | bash",
       "rbenv install 3.0.2 -v",
       "rbenv global 3.0.2",
-      "ruby -v && gem install bundler && gem install rails"
+      "ruby -v && gem install bundler && gem install rails",
+      "cd /home/ubuntu",
+      "git clone https://github.com/vijayprabhu04/ved-workspace.git"
     ]
   }
 
@@ -119,27 +110,9 @@ resource "aws_instance" "postgres_db" {
       "sudo apt-get update",
       "sudo apt-get install -y git curl",
       "sudo apt install -y postgresql postgresql-contrib libpq-dev",
+      "cd /home/ubuntu",
+      "git clone https://github.com/vijayprabhu04/ved-workspace.git"
     ]
-  }
-  
-  provisioner "file" {
-    source      = "../files/postgresql.conf"
-    destination = "/tmp/postgresql.conf"
-  }
-
-  provisioner "file" {
-    source      = "../files/pg_hba.conf"
-    destination = "/tmp/pg_hba.conf"
-  }
-
-  provisioner "file" {
-    source      = "../files/app.sh"
-    destination = "/tmp/app.sh"
-  }
-
-  provisioner "file" {
-    source      = "../files/db.sh"
-    destination = "/tmp/db.sh"
   }
 
   tags = {
