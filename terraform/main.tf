@@ -43,25 +43,37 @@ resource "aws_security_group" "postgres_db_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
 resource "aws_instance" "ec2_instance" {
   ami           = "ami-02eb7a4783e7e9317"
   instance_type = "t2.micro"
-  key_name      = "prathang_personal"
+  key_name      = "pandalovers"
   vpc_security_group_ids = [aws_security_group.allow_ror.id, aws_security_group.allow_ssh.id ]
 
   connection {
     type        = "ssh"
     user        = "ubuntu"
-    private_key = file("/Users/prabhut/database/STG/00-official-projects/keys/prathang_personal.pem")
+    private_key = file("/Users/prabhut/database/STG/00-official-projects/keys/pandalovers.pem")
     host        = self.public_ip
   }
 
   # Copy application file
   provisioner "file" {
-    source      = "/Users/prabhut/database/STG/02-self-projects/04-ved-workspace/appdb"
+    source      = "../appdb"
     destination = "/home/ubuntu/"
+  }
+
+  provisioner "file" {
+    source      = "../files/app.sh"
+    destination = "/tmp/app.sh"
   }
 
   provisioner "remote-exec" {
@@ -69,6 +81,7 @@ resource "aws_instance" "ec2_instance" {
       "sudo apt-get update",
       "sudo apt-get install -y build-essential",
       "sudo apt-get install -y libssl-dev zlib1g-dev sqlite3 libsqlite3-dev",
+      "sudo apt install -y postgresql postgresql-contrib libpq-dev",
       "sudo apt-get install -y git curl",
       "sudo curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-installer | bash",
       "export PATH=\"$HOME/.rbenv/bin:$PATH\"",
@@ -76,7 +89,7 @@ resource "aws_instance" "ec2_instance" {
       "curl -fsSL https://github.com/rbenv/rbenv-installer/raw/HEAD/bin/rbenv-doctor | bash",
       "rbenv install 3.0.2 -v",
       "rbenv global 3.0.2",
-      "ruby -v && gem install bundler && gem install rails",
+      "ruby -v && gem install bundler && gem install rails"
     ]
   }
 
@@ -89,15 +102,17 @@ resource "aws_instance" "ec2_instance" {
 resource "aws_instance" "postgres_db" {
   ami           = "ami-02eb7a4783e7e9317"
   instance_type = "t2.micro"
-  key_name      = "prathang_personal"
+  key_name      = "pandalovers"
   vpc_security_group_ids = [aws_security_group.postgres_db_sg.id, aws_security_group.allow_ssh.id]
 
   connection {
     type        = "ssh"
     user        = "ubuntu"
-    private_key = file("/Users/prabhut/database/STG/00-official-projects/keys/prathang_personal.pem")
+    private_key = file("/Users/prabhut/database/STG/00-official-projects/keys/pandalovers.pem")
     host        = self.public_ip
   }
+
+  # Copy postgres config files
 
   provisioner "remote-exec" {
     inline = [
@@ -105,6 +120,26 @@ resource "aws_instance" "postgres_db" {
       "sudo apt-get install -y git curl",
       "sudo apt install -y postgresql postgresql-contrib libpq-dev",
     ]
+  }
+  
+  provisioner "file" {
+    source      = "../files/postgresql.conf"
+    destination = "/tmp/postgresql.conf"
+  }
+
+  provisioner "file" {
+    source      = "../files/pg_hba.conf"
+    destination = "/tmp/pg_hba.conf"
+  }
+
+  provisioner "file" {
+    source      = "../files/app.sh"
+    destination = "/tmp/app.sh"
+  }
+
+  provisioner "file" {
+    source      = "../files/db.sh"
+    destination = "/tmp/db.sh"
   }
 
   tags = {
