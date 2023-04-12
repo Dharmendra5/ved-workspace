@@ -5,17 +5,20 @@
 
 
 # [DB machine] Switch to postgres user and create db and user
-- chmod +x /tmp/db.sh
-- /tmp/db.sh
+- cd to /home/ubuntu/workspace/files/
+- chmod +x db.sh
+- db.sh
 - sudo su - postgres
 - createuser -s -P appdb
 - createdb postgresql -O appdb
 
 # [ROR server tasks]
+- cd /home/ubuntu/workspace/files/
+- chmod +x app.sh
 - Run shell script with argument to install required gem `./app.sh gem_install`
 - Run shell script with argument to reconfigure creds `./app.sh reconfigure_credentials`
 - rails new appdb -d=postgresql
-- cd /home/ubuntu/appdb/
+- cd worrkspace/appdb/
 - make entry of db in `database.yml` file
   ```
   default: &default
@@ -29,6 +32,8 @@
     password: ******
   ```
 - Run shell script with argument to configure database `./app.sh configure_db`
+- rails console
+- User.create(name: 'John Doe', email: 'john@example.com')
 - Run shell script with argument to configure routes   `./app.sh routes_configure`
-- cd /home/ubuntu/appdb
+- cd workspace/appdb
 - rails server -b 0.0.0.0 
